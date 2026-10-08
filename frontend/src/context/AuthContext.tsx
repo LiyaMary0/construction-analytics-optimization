@@ -6,7 +6,7 @@ import {
   type PropsWithChildren,
 } from "react";
 
-import { loginRequest, logoutRequest } from "../services/authApi";
+import { googleLoginRequest, loginRequest, logoutRequest } from "../services/authApi";
 import { refreshSession } from "../services/refreshTokenManager";
 import { tokenStorage } from "../services/tokenStorage";
 
@@ -94,6 +94,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     return persistSession(session, options?.rememberMe ?? true);
   };
 
+  const loginWithGoogle = async (
+    idToken: string,
+    options?: LoginOptions,
+  ): Promise<AuthSession> => {
+    const session = await googleLoginRequest(idToken);
+    return persistSession(session, options?.rememberMe ?? true);
+  };
+
   const logout = async (): Promise<void> => {
     const refreshToken = tokenStorage.getRefreshToken();
 
@@ -135,6 +143,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       tokens,
       isAuthenticated: status === "authenticated" && Boolean(tokens?.access),
       login,
+      loginWithGoogle,
       logout,
       refreshAuth,
       clearSession,

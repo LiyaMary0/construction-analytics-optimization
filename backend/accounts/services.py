@@ -128,6 +128,72 @@ class AuthenticationService:
         }
 
     @classmethod
+    def login_with_google(cls, *, id_token_value):
+        client_id = getattr(settings, "GOOGLE_CLIENT_ID", "") or ""
+        if not client_id:
+            raise AuthenticationServiceError(
+                message="Google sign-in is not configured.",
+                error_code="google_not_configured",
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                errors={"google": ["Google sign-in is not configured."]},
+            )
+
+        try:
+            from google.auth.transport import requests as google_requests
+            from google.oauth2 import id_token as google_id_token
+
+            payload = google_id_token.verify_oauth2_token(
+                id_token_value,
+                google_requests.Request(),
+                client_id,
+            )
+        except Exception as exc:
+            raise AuthenticationServiceError(
+                message="Google sign-in could not be verified.",
+                error_code="invalid_google_token",
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                errors={"google": ["Google sign-in could not be verified."]},
+            ) from exc
+
+        email = str(payload.get("email") or "").strip().lower()
+        if not email or not payload.get("email_verified", True):
+            raise AuthenticationServiceError(
+                message="Google did not provide a verified email.",
+                error_code="google_email_unverified",
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                errors={"email": ["Google did not provide a verified email."]},
+            )
+
+        login_account = (
+            LoginAccount.objects.select_related("user__role")
+            .filter(email__iexact=email)
+            .first()
+        )
+        if login_account is None:
+            raise AuthenticationServiceError(
+                message="No FORTESITE account exists for this Google email.",
+                error_code="google_account_not_found",
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                errors={
+                    "email": [
+                        "No FORTESITE account exists for this Google email. Ask your Company Administrator to create one.",
+                    ]
+                },
+            )
+
+        cls._ensure_account_is_active(login_account)
+        refresh_token = RefreshToken.for_user(login_account)
+        update_last_login(None, login_account)
+
+        return {
+            "tokens": {
+                "access": str(refresh_token.access_token),
+                "refresh": str(refresh_token),
+            },
+            "user": cls._build_user_payload(login_account),
+        }
+
+    @classmethod
     def refresh(cls, *, refresh):
         try:
             refresh_token = RefreshToken(refresh)

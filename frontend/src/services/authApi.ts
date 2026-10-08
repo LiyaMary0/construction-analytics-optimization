@@ -42,6 +42,15 @@ export const loginRequest = async (
   return response.data.data;
 };
 
+export const googleLoginRequest = async (idToken: string): Promise<AuthSession> => {
+  const response = await publicApiClient.post<ApiSuccessResponse<AuthSession>>(
+    "/auth/google/",
+    { id_token: idToken },
+  );
+
+  return response.data.data;
+};
+
 export const logoutRequest = async (refresh: string): Promise<void> => {
   await publicApiClient.post("/auth/logout/", { refresh });
 };

@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from .responses import error_response, success_response
 from .serializers import (
     ForgotPasswordSerializer,
+    GoogleLoginSerializer,
     LoginSerializer,
     LogoutSerializer,
     RefreshSerializer,
@@ -42,6 +43,41 @@ class LoginView(APIView):
         except Exception:
             return error_response(
                 message="An unexpected authentication error occurred during login.",
+                errors={"server": ["Please try again later."]},
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                error_code="authentication_error",
+            )
+
+        return success_response(message="Login successful.", data=login_data)
+
+
+class GoogleLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = GoogleLoginSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return error_response(
+                message="Google login request validation failed.",
+                errors=serializer.errors,
+                error_code="validation_error",
+            )
+
+        try:
+            login_data = AuthenticationService.login_with_google(
+                id_token_value=serializer.validated_data["id_token"],
+            )
+        except AuthenticationServiceError as exc:
+            return error_response(
+                message=exc.message,
+                errors=exc.errors,
+                status_code=exc.status_code,
+                error_code=exc.error_code,
+            )
+        except Exception:
+            return error_response(
+                message="An unexpected authentication error occurred during Google login.",
                 errors={"server": ["Please try again later."]},
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 error_code="authentication_error",

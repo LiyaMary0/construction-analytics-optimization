@@ -70,6 +70,10 @@ export interface AuthContextValue {
     credentials: LoginCredentials,
     options?: LoginOptions,
   ) => Promise<AuthSession>;
+  loginWithGoogle: (
+    idToken: string,
+    options?: LoginOptions,
+  ) => Promise<AuthSession>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<AuthSession | null>;
   clearSession: () => void;
