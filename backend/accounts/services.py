@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
@@ -13,6 +15,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from .models import LoginAccount, UserProfile
 
+logger = logging.getLogger(__name__)
 password_reset_token_generator = PasswordResetTokenGenerator()
 
 
@@ -127,6 +130,44 @@ class AuthenticationService:
             "user": cls._build_user_payload(login_account),
         }
 
+    @staticmethod
+    def _verify_google_id_token(id_token_value, client_id):
+        from google.auth.transport import requests as google_requests
+        from google.oauth2 import id_token as google_id_token
+
+        try:
+            try:
+                return google_id_token.verify_oauth2_token(
+                    id_token_value,
+                    google_requests.Request(),
+                    audience=client_id,
+                    clock_skew_in_seconds=120,
+                )
+            except TypeError:
+                return google_id_token.verify_oauth2_token(
+                    id_token_value,
+                    google_requests.Request(),
+                    client_id,
+                )
+        except Exception as primary_error:
+            try:
+                import jwt
+                from jwt import PyJWKClient
+
+                signing_key = PyJWKClient(
+                    "https://www.googleapis.com/oauth2/v3/certs",
+                ).get_signing_key_from_jwt(id_token_value)
+                return jwt.decode(
+                    id_token_value,
+                    signing_key.key,
+                    algorithms=["RS256"],
+                    audience=client_id,
+                    issuer=["accounts.google.com", "https://accounts.google.com"],
+                    leeway=120,
+                )
+            except Exception:
+                raise primary_error
+
     @classmethod
     def login_with_google(cls, *, id_token_value):
         client_id = getattr(settings, "GOOGLE_CLIENT_ID", "") or ""
@@ -139,20 +180,16 @@ class AuthenticationService:
             )
 
         try:
-            from google.auth.transport import requests as google_requests
-            from google.oauth2 import id_token as google_id_token
-
-            payload = google_id_token.verify_oauth2_token(
-                id_token_value,
-                google_requests.Request(),
-                client_id,
-            )
+            payload = cls._verify_google_id_token(id_token_value, client_id)
+        except AuthenticationServiceError:
+            raise
         except Exception as exc:
+            logger.exception("Google ID token verification failed")
             raise AuthenticationServiceError(
-                message="Google sign-in could not be verified.",
+                message=f"Google sign-in could not be verified. {exc}",
                 error_code="invalid_google_token",
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                errors={"google": ["Google sign-in could not be verified."]},
+                errors={"google": [str(exc)]},
             ) from exc
 
         email = str(payload.get("email") or "").strip().lower()
