@@ -131,42 +131,24 @@ class AuthenticationService:
         }
 
     @staticmethod
+    def _google_cert_request():
+        try:
+            from google.auth.transport.requests import Request
+        except ImportError:
+            from google.auth.transport._http_client import Request
+
+        return Request()
+
+    @staticmethod
     def _verify_google_id_token(id_token_value, client_id):
-        from google.auth.transport import requests as google_requests
         from google.oauth2 import id_token as google_id_token
 
-        try:
-            try:
-                return google_id_token.verify_oauth2_token(
-                    id_token_value,
-                    google_requests.Request(),
-                    audience=client_id,
-                    clock_skew_in_seconds=120,
-                )
-            except TypeError:
-                return google_id_token.verify_oauth2_token(
-                    id_token_value,
-                    google_requests.Request(),
-                    client_id,
-                )
-        except Exception as primary_error:
-            try:
-                import jwt
-                from jwt import PyJWKClient
-
-                signing_key = PyJWKClient(
-                    "https://www.googleapis.com/oauth2/v3/certs",
-                ).get_signing_key_from_jwt(id_token_value)
-                return jwt.decode(
-                    id_token_value,
-                    signing_key.key,
-                    algorithms=["RS256"],
-                    audience=client_id,
-                    issuer=["accounts.google.com", "https://accounts.google.com"],
-                    leeway=120,
-                )
-            except Exception:
-                raise primary_error
+        return google_id_token.verify_oauth2_token(
+            id_token_value,
+            AuthenticationService._google_cert_request(),
+            client_id,
+            clock_skew_in_seconds=120,
+        )
 
     @classmethod
     def login_with_google(cls, *, id_token_value):
