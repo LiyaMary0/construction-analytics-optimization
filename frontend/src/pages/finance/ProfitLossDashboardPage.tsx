@@ -35,6 +35,14 @@ const OTHER_CATEGORIES = [
 
 const todayIso = (): string => new Date().toISOString().slice(0, 10);
 
+const sumHoursWorked = (hours: Array<string | number | null | undefined>): string => {
+  const total = hours.reduce((sum, value) => {
+    const amount = Number(value);
+    return Number.isFinite(amount) ? sum + amount : sum;
+  }, 0);
+  return total.toFixed(2);
+};
+
 const readError = (error: unknown, fallback: string): string => {
   if (isAxiosError<ApiErrorResponse>(error)) {
     return error.response?.data?.message ?? fallback;
@@ -231,6 +239,16 @@ export const ProfitLossDashboardPage = () => {
   };
 
   const summary = data?.summary;
+  const totalManHours = useMemo(() => {
+    if (!data) {
+      return "0.00";
+    }
+    return sumHoursWorked(
+      data.milestones.flatMap((milestone) =>
+        milestone.workers.map((worker) => worker.hours_worked),
+      ),
+    );
+  }, [data]);
 
   return (
     <div className="pnl-page">
@@ -287,6 +305,12 @@ export const ProfitLossDashboardPage = () => {
             icon={StatIcons.budget}
             value={`${Number(summary.profit_margin_percent).toFixed(1)}%`}
           />
+          <StatCard
+            label="Man-hours"
+            icon={StatIcons.clock}
+            value={totalManHours}
+            meta="From verified attendance used in labour cost"
+          />
         </StatCardRow>
       ) : null}
 
@@ -316,6 +340,7 @@ export const ProfitLossDashboardPage = () => {
                   <th>Milestone</th>
                   <th className="pnl-page__num">Value</th>
                   <th className="pnl-page__num">Labour</th>
+                  <th className="pnl-page__num">Man-hours</th>
                   <th className="pnl-page__num">Material</th>
                   <th className="pnl-page__num">Other</th>
                   <th className="pnl-page__num">Actual</th>
@@ -349,6 +374,9 @@ export const ProfitLossDashboardPage = () => {
                     </td>
                     <td className="pnl-page__num">{formatCurrencyINR(row.contract_value)}</td>
                     <td className="pnl-page__num">{formatCurrencyINR(row.labour_cost)}</td>
+                    <td className="pnl-page__num">
+                      {sumHoursWorked(row.workers.map((worker) => worker.hours_worked))}
+                    </td>
                     <td className="pnl-page__num">{formatCurrencyINR(row.material_cost)}</td>
                     <td className="pnl-page__num">{formatCurrencyINR(row.other_expenses)}</td>
                     <td className="pnl-page__num">{formatCurrencyINR(row.actual_cost)}</td>
@@ -391,6 +419,14 @@ export const ProfitLossDashboardPage = () => {
                 <tr>
                   <td>Labour</td>
                   <td>{formatCurrencyINR(activeMilestone.labour_cost)}</td>
+                </tr>
+                <tr>
+                  <td>Man-hours (attendance)</td>
+                  <td>
+                    {sumHoursWorked(
+                      activeMilestone.workers.map((worker) => worker.hours_worked),
+                    )}
+                  </td>
                 </tr>
                 <tr>
                   <td>Material</td>
@@ -619,6 +655,56 @@ export const ProfitLossDashboardPage = () => {
                       <td className="pnl-page__num">{worker.hours_worked}</td>
                       <td className="pnl-page__num">{formatCurrencyINR(worker.hourly_rate)}/hr</td>
                       <td className="pnl-page__num">{formatCurrencyINR(worker.labour_cost)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
+
+      {activeMilestone ? (
+        <section className="pnl-page__table-wrap">
+          <h3>Man-hour source</h3>
+          <p className="pnl-page__muted">
+            Clocked-out attendance already included in labour cost. Open shifts and clock-ins
+            without a task are not billed.
+          </p>
+          <div className="pnl-page__table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Worker</th>
+                  <th>Task</th>
+                  <th className="pnl-page__num">Hours</th>
+                  <th className="pnl-page__num">Rate</th>
+                  <th className="pnl-page__num">Cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activeMilestone.labour_source.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="pnl-page__muted">
+                      No man-hour source rows for this milestone.
+                    </td>
+                  </tr>
+                ) : (
+                  activeMilestone.labour_source.map((entry, index) => (
+                    <tr key={`${entry.date ?? "none"}-${entry.worker_name}-${index}`}>
+                      <td>
+                        {entry.date || "—"}
+                        {entry.after_original_deadline ? " (after deadline)" : ""}
+                      </td>
+                      <td>
+                        {entry.worker_name}
+                        {entry.using_default_wage ? " (default wage)" : ""}
+                      </td>
+                      <td>{entry.task_title || "—"}</td>
+                      <td className="pnl-page__num">{entry.hours}</td>
+                      <td className="pnl-page__num">{formatCurrencyINR(entry.hourly_rate)}/hr</td>
+                      <td className="pnl-page__num">{formatCurrencyINR(entry.cost)}</td>
                     </tr>
                   ))
                 )}
