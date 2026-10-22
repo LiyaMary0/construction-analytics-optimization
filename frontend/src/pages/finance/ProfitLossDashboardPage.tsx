@@ -36,7 +36,7 @@ const OTHER_CATEGORIES = [
 const todayIso = (): string => new Date().toISOString().slice(0, 10);
 
 const sumHoursWorked = (hours: Array<string | number | null | undefined>): string => {
-  const total = hours.reduce((sum, value) => {
+  const total = hours.reduce<number>((sum, value) => {
     const amount = Number(value);
     return Number.isFinite(amount) ? sum + amount : sum;
   }, 0);
