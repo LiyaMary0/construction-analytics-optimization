@@ -6,4 +6,7 @@ if [ -f "$ROOT/backend/app.py" ] && [ ! -f "$ROOT/app.py" ]; then
 fi
 cd "$ROOT"
 export PYTHONPATH="$ROOT:${PYTHONPATH:-}"
-exec gunicorn --bind=0.0.0.0 --timeout 600 app:app
+if ! python -c "import gunicorn, django, rest_framework" 2>/dev/null; then
+  python -m pip install -r requirements.txt
+fi
+exec python -m gunicorn app:app --bind=0.0.0.0 --timeout 600
