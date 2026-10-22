@@ -180,7 +180,14 @@ EMAIL_BACKEND = os.getenv(
 )
 DEFAULT_FROM_EMAIL = os.getenv("DJANGO_DEFAULT_FROM_EMAIL", "noreply@fortesite.local")
 FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173").rstrip("/")
-CORS_ALLOWED_ORIGINS = [FRONTEND_BASE_URL]
-CSRF_TRUSTED_ORIGINS = [FRONTEND_BASE_URL]
+CORS_ALLOWED_ORIGINS = [origin for origin in [FRONTEND_BASE_URL] if origin]
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.azurestaticapps\.net$",
+]
+CSRF_TRUSTED_ORIGINS = list(
+    dict.fromkeys(
+        [FRONTEND_BASE_URL, "https://polite-rock-0f6855100.6.azurestaticapps.net"]
+    )
+)
 GOOGLE_CLIENT_ID = "".join(os.getenv("GOOGLE_CLIENT_ID", "").split())
 
