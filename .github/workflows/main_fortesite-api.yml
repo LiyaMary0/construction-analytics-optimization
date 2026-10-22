@@ -17,22 +17,22 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
+      - name: Verify Python dependencies
         working-directory: backend
         run: |
           python -m pip install --upgrade pip
-          python -m venv antenv
-          source antenv/bin/activate
           pip install -r requirements.txt
+
+      - name: Zip files for Azure wwwroot
+        working-directory: backend
+        run: zip -r ../site.zip . -x ".env" -x "**/__pycache__/*" -x "**/*.pyc" -x "antenv/*" -x "venv/*"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: python-app
           include-hidden-files: true
-          path: |
-            backend
-            !backend/.env
+          path: site.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -49,4 +49,4 @@ jobs:
           app-name: fortesite-api
           slot-name: Production
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: .
+          package: site.zip

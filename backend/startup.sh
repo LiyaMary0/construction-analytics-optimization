@@ -1,3 +1,9 @@
 #!/usr/bin/env bash
 set -e
-python -m gunicorn config.wsgi:application --bind=0.0.0.0:${PORT:-8000} --timeout 120 --workers 2
+ROOT="/home/site/wwwroot"
+if [ -f "$ROOT/backend/app.py" ] && [ ! -f "$ROOT/app.py" ]; then
+  ROOT="$ROOT/backend"
+fi
+cd "$ROOT"
+export PYTHONPATH="$ROOT:${PYTHONPATH:-}"
+exec gunicorn --bind=0.0.0.0 --timeout 600 app:app

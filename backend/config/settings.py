@@ -38,6 +38,9 @@ ALLOWED_HOSTS = [
 ]
 if ".azurewebsites.net" not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(".azurewebsites.net")
+website_hostname = os.getenv("WEBSITE_HOSTNAME", "").strip()
+if website_hostname and website_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(website_hostname)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -146,6 +149,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
