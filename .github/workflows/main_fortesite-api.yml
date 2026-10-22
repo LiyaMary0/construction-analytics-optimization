@@ -25,7 +25,9 @@ jobs:
 
       - name: Zip files for Azure wwwroot
         working-directory: backend
-        run: zip -r ../site.zip . -x ".env" -x "**/__pycache__/*" -x "**/*.pyc" -x "antenv/*" -x "venv/*"
+        run: |
+          sed -i 's/\r$//' startup.sh startup.py
+          zip -r ../site.zip . -x ".env" -x "**/__pycache__/*" -x "**/*.pyc" -x "antenv/*" -x "venv/*"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
