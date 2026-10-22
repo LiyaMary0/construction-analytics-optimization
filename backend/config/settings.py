@@ -28,7 +28,16 @@ load_env_file(BASE_DIR / ".env")
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")
 DEBUG = os.getenv("DJANGO_DEBUG", "1") == "1"
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv(
+        "DJANGO_ALLOWED_HOSTS",
+        "localhost,127.0.0.1,.azurewebsites.net",
+    ).split(",")
+    if host.strip()
+]
+if ".azurewebsites.net" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(".azurewebsites.net")
 
 INSTALLED_APPS = [
     "django.contrib.admin",

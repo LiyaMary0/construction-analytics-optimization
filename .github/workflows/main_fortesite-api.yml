@@ -44,3 +44,4 @@ jobs:
           app-name: fortesite-api
           slot-name: Production
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          startup-command: python -m gunicorn config.wsgi:application --bind=0.0.0.0:8000 --timeout 120 --workers 2
