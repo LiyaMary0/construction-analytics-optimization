@@ -21,13 +21,18 @@ jobs:
         working-directory: backend
         run: |
           python -m pip install --upgrade pip
+          python -m venv antenv
+          source antenv/bin/activate
           pip install -r requirements.txt
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: backend
+          include-hidden-files: true
+          path: |
+            backend
+            !backend/.env
 
   deploy:
     runs-on: ubuntu-latest
@@ -44,4 +49,4 @@ jobs:
           app-name: fortesite-api
           slot-name: Production
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          startup-command: python -m gunicorn config.wsgi:application --bind=0.0.0.0:8000 --timeout 120 --workers 2
+          package: .
