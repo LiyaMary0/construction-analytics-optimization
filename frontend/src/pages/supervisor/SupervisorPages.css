@@ -67,6 +67,33 @@
   white-space: nowrap;
 }
 
+.supervisor-page__inbox-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.supervisor-page__inbox-tab {
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 1px solid var(--supervisor-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--supervisor-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.supervisor-page__inbox-tab.is-active {
+  border-color: var(--supervisor-accent);
+  background: rgba(255, 90, 31, 0.12);
+  color: var(--supervisor-text);
+}
+
+.supervisor-page__review-board {
+  padding: 16px 18px;
+}
+
 .supervisor-page__toolbar {
   display: flex;
   align-items: center;

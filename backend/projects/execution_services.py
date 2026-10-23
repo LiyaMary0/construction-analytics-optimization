@@ -14,7 +14,11 @@ from accounts.permissions import (
 )
 
 from .models import DailyTaskUpdate, Milestone, MilestoneExtension, MilestoneTask, Project, ProjectAssignment, TaskWorkerAssignment
-from .serializers import get_milestone_progress_percentage, get_task_progress_percentage
+from .serializers import (
+    get_milestone_progress_percentage,
+    get_project_progress_percentage,
+    get_task_progress_percentage,
+)
 from .services import ProjectService, ProjectServiceError
 
 
@@ -389,6 +393,26 @@ class ProjectExecutionService:
         if milestone.status != next_status:
             milestone.status = next_status
             milestone.save(update_fields=["status", "updated_at"])
+
+        cls._refresh_project_status(milestone.project)
+
+    @classmethod
+    def _refresh_project_status(cls, project):
+        if project.status == Project.STATUS_ON_HOLD:
+            return
+
+        progress = get_project_progress_percentage(project)
+
+        if progress >= 100:
+            next_status = Project.STATUS_COMPLETED
+        elif progress > 0:
+            next_status = Project.STATUS_ACTIVE
+        else:
+            return
+
+        if project.status != next_status:
+            project.status = next_status
+            project.save(update_fields=["status", "updated_at"])
 
     @classmethod
     def _refresh_task_status(cls, task):
@@ -836,6 +860,15 @@ class ProjectExecutionService:
             WORKER_ROLE_NAME,
             "Selected Worker account is inactive.",
         )
+
+        existing_assignment = TaskWorkerAssignment.objects.filter(task=task, worker=worker).first()
+        if existing_assignment and existing_assignment.is_active:
+            raise ProjectServiceError(
+                message="This worker is already assigned to this task.",
+                error_code="worker_already_assigned",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                errors={"worker_id": ["This worker is already assigned to this task."]},
+            )
 
         assignment, _ = TaskWorkerAssignment.objects.get_or_create(
             task=task,

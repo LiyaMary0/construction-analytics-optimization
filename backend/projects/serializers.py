@@ -135,9 +135,12 @@ def get_task_progress_percentage(task: MilestoneTask) -> Decimal:
                 .first()
             )
 
-        completion_values.append(
-            approved_update.completion_percentage if approved_update is not None else ZERO_DECIMAL,
-        )
+        if approved_update is None:
+            completion_values.append(ZERO_DECIMAL)
+        elif approved_update.status == DailyTaskUpdate.STATUS_COMPLETED:
+            completion_values.append(HUNDRED_DECIMAL)
+        else:
+            completion_values.append(approved_update.completion_percentage)
 
     if not completion_values:
         return ZERO_DECIMAL

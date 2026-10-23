@@ -131,8 +131,8 @@ export const SupervisorDashboardPage = () => {
         <section className="supervisor-page__section">
           <div className="supervisor-page__section-header">
             <h3 className="supervisor-page__section-title">Daily Work to Review</h3>
-            <Link className="supervisor-page__section-link" to="/supervisor/projects">
-              Open Projects →
+            <Link className="supervisor-page__section-link" to="/supervisor/verifications?tab=tasks">
+              Review completions →
             </Link>
           </div>
           {isLoading ? (
@@ -141,7 +141,7 @@ export const SupervisorDashboardPage = () => {
             <div className="supervisor-empty supervisor-empty--compact">
               <strong className="supervisor-empty__title">No daily updates waiting</strong>
               <p className="supervisor-empty__description">
-                Worker progress updates appear under each project&apos;s Reports tab.
+                Worker completion submissions appear in Verifications.
               </p>
             </div>
           ) : (
@@ -158,7 +158,7 @@ export const SupervisorDashboardPage = () => {
                   </div>
                   <Link
                     className="supervisor-page__section-link"
-                    to="/supervisor/projects"
+                    to="/supervisor/verifications?tab=tasks"
                   >
                     Review
                   </Link>
@@ -171,7 +171,7 @@ export const SupervisorDashboardPage = () => {
         <section className="supervisor-page__section">
           <div className="supervisor-page__section-header">
             <h3 className="supervisor-page__section-title">Workplace Needs</h3>
-            <Link className="supervisor-page__section-link" to="/supervisor/verifications">
+            <Link className="supervisor-page__section-link" to="/supervisor/verifications?tab=needs">
               Verifications →
             </Link>
           </div>

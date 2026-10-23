@@ -248,8 +248,8 @@ export const DailyUpdateBoard = ({
                       {processingUpdateId === update.update_id
                         ? "Saving..."
                         : mode === "site-engineer"
-                          ? "Verify"
-                          : "Approve"}
+                          ? "Verify completion"
+                          : "Approve completion"}
                     </button>
                   </div>
                 </div>

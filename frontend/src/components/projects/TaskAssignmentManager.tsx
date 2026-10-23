@@ -62,6 +62,22 @@ export const TaskAssignmentManager = ({
     return tasks.find((task) => task.task_id === selectedTaskId) ?? null;
   }, [selectedTaskId, tasks]);
 
+  const availableWorkers = useMemo(() => {
+    const assignedIds = new Set(
+      (selectedTask?.active_assignments ?? [])
+        .map((assignment) => assignment.worker?.user_id)
+        .filter((userId): userId is number => typeof userId === "number"),
+    );
+    const editingWorkerId = editingAssignment?.worker?.user_id ?? null;
+
+    return workers.filter((worker) => {
+      if (editingWorkerId !== null && worker.user_id === editingWorkerId) {
+        return true;
+      }
+      return !assignedIds.has(worker.user_id);
+    });
+  }, [editingAssignment, selectedTask, workers]);
+
   const validateWith = (overrides: AssignmentLiveOverrides = {}) =>
     validateAssignmentFormFields({
       taskSelected: overrides.taskSelected ?? Boolean(selectedTaskId),
@@ -245,7 +261,7 @@ export const TaskAssignmentManager = ({
                 onBlur={() => touchAndValidate("worker_id", () => validateWith())}
               >
                 <option value="">Select a worker</option>
-                {workers.map((worker) => (
+                {availableWorkers.map((worker) => (
                   <option key={worker.user_id} value={worker.user_id}>
                     {worker.name} ({worker.email})
                   </option>
@@ -254,6 +270,11 @@ export const TaskAssignmentManager = ({
               {fieldErrors.worker_id ? (
                 <span className="task-assignment-manager__field-error">
                   {fieldErrors.worker_id}
+                </span>
+              ) : null}
+              {selectedTask && availableWorkers.length === 0 && !editingAssignment ? (
+                <span className="task-assignment-manager__field-error">
+                  All available workers are already assigned to this task.
                 </span>
               ) : null}
             </label>
@@ -304,7 +325,11 @@ export const TaskAssignmentManager = ({
             <button
               type="submit"
               className="btn task-assignment-manager__primary-action"
-              disabled={processingAssignmentId !== null || !selectedTask.is_approved}
+              disabled={
+                processingAssignmentId !== null ||
+                !selectedTask.is_approved ||
+                (availableWorkers.length === 0 && !editingAssignment)
+              }
             >
               {processingAssignmentId !== null
                 ? "Saving..."
