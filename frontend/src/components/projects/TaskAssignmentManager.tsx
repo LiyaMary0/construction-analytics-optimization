@@ -203,26 +203,35 @@ export const TaskAssignmentManager = ({
       <label className="task-assignment-manager__field">
         <span className="task-assignment-manager__label">Task</span>
         <select
-          className={`form-select admin-control${fieldErrors.task_id ? " is-invalid" : ""}`}
-          value={selectedTaskId ?? ""}
+          className={`admin-control${
+            view !== "list" && fieldErrors.task_id ? " is-invalid" : ""
+          }`}
+          value={selectedTaskId != null ? String(selectedTaskId) : ""}
           onChange={(event) => {
             onSelectTask(event.target.value ? Number(event.target.value) : 0);
+            if (view === "list") {
+              return;
+            }
             touchAndValidate("task_id", () =>
               validateWith({
                 taskSelected: Boolean(event.target.value),
               }),
             );
           }}
-          onBlur={() => touchAndValidate("task_id", () => validateWith())}
+          onBlur={() => {
+            if (view !== "list") {
+              touchAndValidate("task_id", () => validateWith());
+            }
+          }}
         >
           <option value="">Select a task</option>
           {tasks.map((task) => (
-            <option key={task.task_id} value={task.task_id}>
+            <option key={task.task_id} value={String(task.task_id)}>
               {task.title}
             </option>
           ))}
         </select>
-        {fieldErrors.task_id ? (
+        {view !== "list" && fieldErrors.task_id ? (
           <span className="task-assignment-manager__field-error">{fieldErrors.task_id}</span>
         ) : null}
       </label>
@@ -351,7 +360,6 @@ export const TaskAssignmentManager = ({
               className="btn task-assignment-manager__primary-action"
               disabled={
                 processingAssignmentId !== null ||
-                !selectedTask.is_approved ||
                 (availableWorkers.length === 0 && !editingAssignment)
               }
             >
@@ -371,7 +379,6 @@ export const TaskAssignmentManager = ({
             type="button"
             className="btn task-assignment-manager__primary-action"
             onClick={onAssignClick}
-            disabled={!selectedTask.is_approved}
           >
             Assign Worker
           </button>

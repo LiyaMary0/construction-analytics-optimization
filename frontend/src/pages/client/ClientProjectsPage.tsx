@@ -14,8 +14,11 @@ import type {
   ProjectSummary,
 } from "../../types/project";
 import { ProjectTimeline } from "../../components/projects/ProjectTimeline";
+import { useAuth } from "../../hooks/useAuth";
 import { formatDisplayTitle } from "../../utils/formatDisplayTitle";
+import { formatHeaderDate, getGreeting } from "../worker/workerFormatters";
 
+import "../../styles/roleDashboard.css";
 import "./ClientProjectsPage.css";
 
 const getErrorMessage = (error: unknown, fallbackMessage: string): string => {
@@ -52,6 +55,7 @@ const formatPeople = (
 };
 
 export const ClientProjectsPage = () => {
+  const { user } = useAuth();
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [selectedProject, setSelectedProject] = useState<ProjectDetail | null>(null);
@@ -126,17 +130,67 @@ export const ClientProjectsPage = () => {
     await loadProjectBundle(projectId);
   };
 
+  const milestoneTotal = projects.reduce((sum, project) => sum + (project.milestone_count || 0), 0);
+  const documentTotal = projects.reduce((sum, project) => sum + (project.document_count || 0), 0);
+
   return (
-    <main className="client-projects-page">
-      <header className="client-projects-page__intro">
+    <main className="client-projects-page role-dash">
+      <header className="role-dash__header">
         <div>
-          <p className="client-projects-page__eyebrow">Client workspace</p>
-          <h1 className="client-projects-page__title">Your projects</h1>
-          <p className="client-projects-page__subtitle">
-            Review progress, milestones, and shared documents for projects assigned to you.
+          <p className="role-dash__kicker">
+            {getGreeting()}, {user?.name ?? "Client"}
+          </p>
+          <h1 className="role-dash__title">Your projects</h1>
+          <p className="role-dash__subtitle">
+            Trace shared work through progress, milestones and documents.
           </p>
         </div>
+        <p className="role-dash__date">{formatHeaderDate(new Date())}</p>
       </header>
+
+      <section className="role-dash__stats role-dash__stats--3" aria-label="Project summary">
+        <article className="role-dash__stat">
+          <span>Projects</span>
+          <strong>{isLoading ? "—" : projects.length}</strong>
+        </article>
+        <article className="role-dash__stat">
+          <span>Milestones</span>
+          <strong>{isLoading ? "—" : milestoneTotal}</strong>
+        </article>
+        <article className="role-dash__stat">
+          <span>Documents</span>
+          <strong>{isLoading ? "—" : documentTotal}</strong>
+        </article>
+      </section>
+
+      <section className="role-dash__map" aria-label="Client tracer">
+        <div className="role-dash__map-head">
+          <h2>Project tracer</h2>
+          <p>How your shared project is organised.</p>
+        </div>
+        <ol className="role-dash__trace">
+          <li>
+            <span className="role-dash__trace-node">
+              <span className="role-dash__trace-label">Project</span>
+              <strong>{isLoading ? "—" : projects.length}</strong>
+            </span>
+          </li>
+          <li className="role-dash__trace-line" aria-hidden="true" />
+          <li>
+            <span className="role-dash__trace-node">
+              <span className="role-dash__trace-label">Milestones</span>
+              <strong>{isLoading ? "—" : milestoneTotal}</strong>
+            </span>
+          </li>
+          <li className="role-dash__trace-line" aria-hidden="true" />
+          <li>
+            <span className="role-dash__trace-node">
+              <span className="role-dash__trace-label">Documents</span>
+              <strong>{isLoading ? "—" : documentTotal}</strong>
+            </span>
+          </li>
+        </ol>
+      </section>
 
       {errorMessage ? (
         <div className="alert alert-danger client-projects-page__alert" role="alert">

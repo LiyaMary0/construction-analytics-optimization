@@ -33,6 +33,8 @@ try:
     )
     driver.save_screenshot(str(REPORTS / "07_create_worker.png"))
     print("PASS: create worker with valid details")
+    print(f"EMAIL: {email}")
+    print(f"PHONE: {phone}")
     print("SCREENSHOT: tests/selenium/reports/07_create_worker.png")
 finally:
     driver.quit()

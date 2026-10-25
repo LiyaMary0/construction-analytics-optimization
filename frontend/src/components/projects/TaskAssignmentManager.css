@@ -105,7 +105,8 @@
 
 .task-assignment-manager__field .form-select,
 .task-assignment-manager__field .form-control,
-.task-assignment-manager select.form-select {
+.task-assignment-manager select.form-select,
+.task-assignment-manager select.admin-control {
   width: 100%;
   min-height: 2.6rem;
   height: 2.6rem;
@@ -113,7 +114,7 @@
   border: 1px solid var(--brand-border, #34383c);
   border-radius: 0.5rem;
   color: #ffffff;
-  background: #1a1e22;
+  background-color: #1a1e22;
   font-size: 0.875rem;
 }
 

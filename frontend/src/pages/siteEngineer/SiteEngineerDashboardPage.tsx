@@ -14,7 +14,7 @@ import { formatDisplayTitle } from "../../utils/formatDisplayTitle";
 import { formatHeaderDate, getGreeting } from "../worker/workerFormatters";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 
-import "./SiteEngineerPages.css";
+import "../../styles/roleDashboard.css";
 
 type MilestoneRow = Milestone & { project_name: string; project_id: number };
 
@@ -98,145 +98,131 @@ export const SiteEngineerDashboardPage = () => {
     [milestones],
   );
 
-  const previewMilestones = milestones.slice(0, 8);
-
   return (
-    <main className="site-engineer-page">
-      <div className="site-engineer-page-content">
-        {errorMessage ? (
-          <div className="alert alert-danger site-engineer-page__alert" role="alert">
-            {errorMessage}
-          </div>
-        ) : null}
+    <div className="role-dash">
+      <header className="role-dash__header">
+        <div>
+          <p className="role-dash__kicker">
+            {getGreeting()}, {user?.name ?? "Site Engineer"}
+          </p>
+          <h1 className="role-dash__title">Dashboard</h1>
+          <p className="role-dash__subtitle">
+            Trace assigned projects through milestones, tasks and verifications.
+          </p>
+        </div>
+        <p className="role-dash__date">{formatHeaderDate(new Date())}</p>
+      </header>
 
-        <header className="site-engineer-page__intro">
-          <div className="site-engineer-page__intro-row">
-            <div>
-              <p className="site-engineer-page__greeting">
-                {getGreeting()}, {user?.name ?? "Site Engineer"}
-              </p>
-              <p className="site-engineer-page__support">
-                Monitor milestones, design tasks, and verify supervisor-approved progress.
-              </p>
-            </div>
-            <p className="site-engineer-page__date">{formatHeaderDate(new Date())}</p>
-          </div>
-        </header>
+      {errorMessage ? (
+        <div className="alert alert-danger mb-0" role="alert">
+          {errorMessage}
+        </div>
+      ) : null}
 
-        <section className="site-engineer-stats" aria-label="Workspace summary">
-          <article className="site-engineer-stat">
-            <span className="site-engineer-stat__label">Projects</span>
-            <strong className="site-engineer-stat__value">
-              {isLoading ? "—" : projects.length}
-            </strong>
-          </article>
-          <article className="site-engineer-stat">
-            <span className="site-engineer-stat__label">Milestones</span>
-            <strong className="site-engineer-stat__value">
-              {isLoading ? "—" : milestones.length}
-            </strong>
-          </article>
-          <article className="site-engineer-stat">
-            <span className="site-engineer-stat__label">Pending Verifications</span>
-            <strong className="site-engineer-stat__value">
-              {isLoading ? "—" : pendingUpdates.length}
-            </strong>
-          </article>
-          <article className="site-engineer-stat">
-            <span className="site-engineer-stat__label">Behind Schedule</span>
-            <strong className="site-engineer-stat__value">
-              {isLoading ? "—" : behindCount}
-            </strong>
-          </article>
-        </section>
+      <section className="role-dash__stats" aria-label="Workspace summary">
+        <article className="role-dash__stat">
+          <span>Projects</span>
+          <strong>{isLoading ? "—" : projects.length}</strong>
+        </article>
+        <article className="role-dash__stat">
+          <span>Milestones</span>
+          <strong>{isLoading ? "—" : milestones.length}</strong>
+        </article>
+        <article className="role-dash__stat">
+          <span>Verifications</span>
+          <strong>{isLoading ? "—" : pendingUpdates.length}</strong>
+        </article>
+        <article className="role-dash__stat">
+          <span>Behind schedule</span>
+          <strong>{isLoading ? "—" : behindCount}</strong>
+        </article>
+      </section>
 
-        <section className="site-engineer-quick-links" aria-label="Quick links">
-          <Link className="site-engineer-quick-link" to="/site-engineer/projects">
-            <strong>Projects &amp; Milestones</strong>
-            <span>Review authorized schedules and progress</span>
-          </Link>
-          <Link className="site-engineer-quick-link" to="/site-engineer/tasks">
-            <strong>Task Management</strong>
-            <span>Break milestones into expected work</span>
-          </Link>
-          <Link className="site-engineer-quick-link" to="/site-engineer/verifications">
-            <strong>Verification Queue</strong>
-            <span>
-              {pendingUpdates.length} update{pendingUpdates.length === 1 ? "" : "s"} awaiting review
-            </span>
-          </Link>
-        </section>
-
-        <section className="site-engineer-card">
-          <div className="site-engineer-card__header">
-            <h2 className="site-engineer-card__title">Milestone Schedule</h2>
-            <Link className="site-engineer-card__link" to="/site-engineer/projects">
-              View all
+      <section className="role-dash__map" aria-label="Site engineer tracer">
+        <div className="role-dash__map-head">
+          <h2>Work tracer</h2>
+          <p>How site engineering work is connected.</p>
+        </div>
+        <ol className="role-dash__trace">
+          <li>
+            <Link className="role-dash__trace-node" to="/site-engineer/projects">
+              <span className="role-dash__trace-label">Projects</span>
+              <strong>{isLoading ? "—" : projects.length}</strong>
             </Link>
-          </div>
+          </li>
+          <li className="role-dash__trace-line" aria-hidden="true" />
+          <li>
+            <Link className="role-dash__trace-node" to="/site-engineer/tasks">
+              <span className="role-dash__trace-label">Tasks</span>
+              <strong>{isLoading ? "—" : milestones.length}</strong>
+            </Link>
+          </li>
+          <li className="role-dash__trace-line" aria-hidden="true" />
+          <li>
+            <Link className="role-dash__trace-node" to="/site-engineer/verifications">
+              <span className="role-dash__trace-label">Verifications</span>
+              <strong>{isLoading ? "—" : pendingUpdates.length}</strong>
+            </Link>
+          </li>
+        </ol>
+      </section>
 
-          {isLoading ? (
-            <div className="site-engineer-empty">Loading milestones...</div>
-          ) : previewMilestones.length === 0 ? (
-            <div className="site-engineer-empty">No milestones on assigned projects yet.</div>
-          ) : (
-            <div className="site-engineer-milestone-table-wrap">
-              <table className="site-engineer-milestone-table">
-                <thead>
-                  <tr>
-                    <th>Project / Milestone</th>
-                    <th>Timeline</th>
-                    <th>Planned %</th>
-                    <th>Actual %</th>
-                    <th>Schedule</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {previewMilestones.map((milestone) => {
-                    const planned = Number(milestone.expected_progress_percentage || 0);
-                    const actual = Number(milestone.progress_percentage || 0);
-                    return (
-                      <tr key={`${milestone.project_id}-${milestone.milestone_id}`}>
-                        <td>
-                          {formatDisplayTitle(milestone.title) || milestone.title}
-                          <span className="meta">
-                            {formatDisplayTitle(milestone.project_name) || milestone.project_name}
-                          </span>
-                        </td>
-                        <td>
-                          {formatDate(milestone.planned_start_date)} →{" "}
-                          {formatDate(milestone.effective_end_date || milestone.planned_end_date)}
-                          <span className="meta">
-                            Original: {formatDate(milestone.planned_end_date)}
-                          </span>
-                        </td>
-                        <td>{planned.toFixed(0)}%</td>
-                        <td>{actual.toFixed(0)}%</td>
-                        <td>
-                          <StatusBadge
-                            className="status-badge--compact"
-                            label={milestone.schedule_status_label || "On Schedule"}
-                            tone={
-                              milestone.schedule_status === "behind_schedule"
-                                ? "delayed"
-                                : milestone.schedule_status === "ahead_of_schedule"
-                                  ? "active"
-                                  : milestone.schedule_status === "completed"
-                                    ? "completed"
-                                    : "planning"
-                            }
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      </div>
-    </main>
+      <section className="role-dash__list">
+        <div className="role-dash__list-head">
+          <h2>Assigned projects</h2>
+          <span>{isLoading ? "…" : `${projects.length} active`}</span>
+        </div>
+        {isLoading ? (
+          <p className="role-dash__empty">Loading projects...</p>
+        ) : projects.length === 0 ? (
+          <p className="role-dash__empty">No projects assigned yet.</p>
+        ) : (
+          <ul className="role-dash__projects">
+            {projects.map((project) => {
+              const progress = Number(project.progress_percentage || 0);
+              return (
+                <li key={project.project_id}>
+                  <article className="role-dash__project">
+                    <Link className="role-dash__project-main" to="/site-engineer/projects">
+                      <div className="role-dash__project-top">
+                        <h3>{formatDisplayTitle(project.project_name) || project.project_name}</h3>
+                        <StatusBadge
+                          className="status-badge--compact"
+                          label={project.status.replace(/_/g, " ")}
+                          tone={project.status}
+                        />
+                      </div>
+                      <p className="role-dash__project-meta">
+                        {formatDate(project.start_date)} → {formatDate(project.end_date)}
+                      </p>
+                      <div className="role-dash__progress">
+                        <div className="role-dash__progress-head">
+                          <span>Progress</span>
+                          <strong>{progress.toFixed(0)}%</strong>
+                        </div>
+                        <div className="role-dash__progress-bar" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+                          <span style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} />
+                        </div>
+                      </div>
+                    </Link>
+                    <div className="role-dash__mini-trace">
+                      <Link to="/site-engineer/projects">
+                        Milestones
+                        <em>{project.milestone_count}</em>
+                      </Link>
+                      <span aria-hidden="true" />
+                      <Link to="/site-engineer/tasks">Tasks</Link>
+                      <span aria-hidden="true" />
+                      <Link to="/site-engineer/verifications">Verifications</Link>
+                    </div>
+                  </article>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    </div>
   );
 };
 

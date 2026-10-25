@@ -47,6 +47,7 @@ export const SupervisorAssignmentsPage = () => {
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<number | null>(null);
+  const [allTasks, setAllTasks] = useState<MilestoneTask[]>([]);
   const [milestoneTasks, setMilestoneTasks] = useState<MilestoneTask[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [workers, setWorkers] = useState<ProjectLookupUser[]>([]);
@@ -76,6 +77,33 @@ export const SupervisorAssignmentsPage = () => {
     }
   };
 
+  const applyTaskSelection = (
+    tasks: MilestoneTask[],
+    milestoneId: number | null,
+    preferredTaskId?: number | null,
+  ) => {
+    let activeMilestoneId = milestoneId;
+    let visibleTasks = activeMilestoneId
+      ? tasks.filter((task) => task.milestone?.milestone_id === activeMilestoneId)
+      : [];
+
+    if (visibleTasks.length === 0 && tasks.length > 0) {
+      activeMilestoneId = tasks[0]?.milestone?.milestone_id ?? activeMilestoneId;
+      visibleTasks = tasks.filter(
+        (task) => task.milestone?.milestone_id === activeMilestoneId,
+      );
+      setSelectedMilestoneId(activeMilestoneId);
+    }
+
+    setMilestoneTasks(visibleTasks);
+
+    const nextTaskId =
+      preferredTaskId && visibleTasks.some((task) => task.task_id === preferredTaskId)
+        ? preferredTaskId
+        : visibleTasks[0]?.task_id ?? null;
+    setSelectedTaskId(nextTaskId);
+  };
+
   const loadAssignments = async (projectId: number, milestoneId?: number | null) => {
     setIsDetailLoading(true);
     setErrorMessage(null);
@@ -87,21 +115,38 @@ export const SupervisorAssignmentsPage = () => {
       setMilestones(milestoneData.results);
       setWorkers(workerOptions);
 
-      const nextMilestoneId =
+      const projectTasks = (
+        await Promise.all(
+          milestoneData.results.map((milestone) =>
+            listMilestoneTasks(projectId, milestone.milestone_id),
+          ),
+        )
+      ).flatMap((item) => item.results);
+      setAllTasks(projectTasks);
+
+      const requestedMilestoneId =
         milestoneId && milestoneData.results.some((item) => item.milestone_id === milestoneId)
           ? milestoneId
-          : milestoneData.results[0]?.milestone_id ?? null;
-      setSelectedMilestoneId(nextMilestoneId);
+          : null;
+      const milestoneWithTasks =
+        requestedMilestoneId &&
+        projectTasks.some((task) => task.milestone?.milestone_id === requestedMilestoneId)
+          ? requestedMilestoneId
+          : projectTasks[0]?.milestone?.milestone_id ??
+            milestoneData.results[0]?.milestone_id ??
+            null;
+      setSelectedMilestoneId(milestoneWithTasks);
 
-      if (!nextMilestoneId) {
+      if (!milestoneWithTasks) {
         setMilestoneTasks([]);
         setSelectedTaskId(null);
         return;
       }
 
-      const taskData = await listMilestoneTasks(projectId, nextMilestoneId);
-      setMilestoneTasks(taskData.results);
-      setSelectedTaskId(taskData.results[0]?.task_id ?? null);
+      const preferredTaskId = searchParams.get("task")
+        ? Number(searchParams.get("task"))
+        : null;
+      applyTaskSelection(projectTasks, milestoneWithTasks, preferredTaskId);
     } catch (error) {
       setErrorMessage(getErrorMessage(error, "Unable to load assignments."));
     } finally {
@@ -118,16 +163,10 @@ export const SupervisorAssignmentsPage = () => {
       return;
     }
     const milestoneFromQuery = searchParams.get("milestone");
-    const taskFromQuery = searchParams.get("task");
-    void (async () => {
-      await loadAssignments(
-        selectedProjectId,
-        milestoneFromQuery ? Number(milestoneFromQuery) : undefined,
-      );
-      if (taskFromQuery) {
-        setSelectedTaskId(Number(taskFromQuery));
-      }
-    })();
+    void loadAssignments(
+      selectedProjectId,
+      milestoneFromQuery ? Number(milestoneFromQuery) : undefined,
+    );
   }, [isProjectPage, selectedProjectId, pathname]);
 
   const handleSelectMilestone = async (milestoneId: number) => {
@@ -137,16 +176,28 @@ export const SupervisorAssignmentsPage = () => {
     const nextId = milestoneId > 0 ? milestoneId : null;
     setSelectedMilestoneId(nextId);
     if (!nextId) {
-      setMilestoneTasks([]);
-      setSelectedTaskId(null);
+      setMilestoneTasks(allTasks);
+      setSelectedTaskId(allTasks[0]?.task_id ?? null);
       return;
     }
-    try {
-      const taskData = await listMilestoneTasks(selectedProjectId, nextId);
-      setMilestoneTasks(taskData.results);
-      setSelectedTaskId(taskData.results[0]?.task_id ?? null);
-    } catch (error) {
-      setErrorMessage(getErrorMessage(error, "Unable to load milestone tasks."));
+    applyTaskSelection(allTasks, nextId, selectedTaskId);
+  };
+
+  const handleSelectTask = (taskId: number) => {
+    const nextId = taskId > 0 ? taskId : null;
+    setSelectedTaskId(nextId);
+    if (!nextId) {
+      return;
+    }
+    const selected =
+      allTasks.find((task) => task.task_id === nextId) ??
+      milestoneTasks.find((task) => task.task_id === nextId);
+    const taskMilestoneId = selected?.milestone?.milestone_id ?? null;
+    if (taskMilestoneId && taskMilestoneId !== selectedMilestoneId) {
+      setSelectedMilestoneId(taskMilestoneId);
+      setMilestoneTasks(
+        allTasks.filter((task) => task.milestone?.milestone_id === taskMilestoneId),
+      );
     }
   };
 
@@ -339,7 +390,7 @@ export const SupervisorAssignmentsPage = () => {
                     tasks={milestoneTasks}
                     workers={workers}
                     selectedTaskId={selectedTaskId}
-                    onSelectTask={(taskId) => setSelectedTaskId(taskId > 0 ? taskId : null)}
+                    onSelectTask={handleSelectTask}
                     onCreateAssignment={handleCreateAssignment}
                     onUpdateAssignment={handleUpdateAssignment}
                     onDeleteAssignment={handleDeleteAssignment}
