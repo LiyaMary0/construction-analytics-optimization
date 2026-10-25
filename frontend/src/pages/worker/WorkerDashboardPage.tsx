@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { isAxiosError } from "axios";
 
-import { WorkerTaskBoard } from "../../components/projects/WorkerTaskBoard";
-import { WorkplaceNeedsPanel } from "../../components/projects/WorkplaceNeedsPanel";
 import { useWorkspacePageTitle } from "../../contexts/AdminChromeContext";
 import { useAuth } from "../../hooks/useAuth";
 import {
@@ -11,32 +8,18 @@ import {
   clockOutWorker,
   fetchWorkerAttendanceDashboard,
 } from "../../services/attendanceApi";
-import {
-  createTaskAssignmentUpdate,
-  createWorkplaceNeed,
-  getWorkplaceNeedContext,
-  listMyTaskAssignments,
-  listMyWorkplaceNeeds,
-} from "../../services/projectApi";
+import { listMyTaskAssignments, listMyWorkplaceNeeds } from "../../services/projectApi";
 
 import type { ApiErrorResponse } from "../../types/auth";
-import type { AttendanceShiftRecord, WorkerAttendanceDashboardData } from "../../types/attendance";
-import type {
-  DailyTaskUpdatePayload,
-  TaskAssignment,
-  WorkplaceNeed,
-  WorkplaceNeedContextProject,
-} from "../../types/project";
+import type { WorkerAttendanceDashboardData } from "../../types/attendance";
+import type { TaskAssignment, WorkplaceNeed } from "../../types/project";
 
 import {
-  formatCompactDate,
   formatDisplayHours,
   formatDuration,
   formatHeaderDate,
   formatLoggedHours,
-  formatRecordHours,
   formatStartedAt,
-  formatTimeOnly,
   getElapsedSeconds,
   getFirstErrorMessage,
   getGreeting,
@@ -44,8 +27,6 @@ import {
 
 import "../../styles/roleDashboard.css";
 import "./WorkerPages.css";
-
-type TaskFilter = "all" | "pending" | "in_progress" | "completed";
 
 const OPEN_NEED_STATUSES = new Set([
   "submitted",
@@ -58,49 +39,15 @@ const OPEN_NEED_STATUSES = new Set([
 const getAssignmentStatus = (assignment: TaskAssignment): string =>
   assignment.latest_update?.status ?? assignment.task.status ?? "planned";
 
-const matchesFilter = (assignment: TaskAssignment, filter: TaskFilter): boolean => {
-  if (filter === "all") {
-    return true;
-  }
-
-  const status = getAssignmentStatus(assignment).toLowerCase();
-
-  if (filter === "pending") {
-    return status === "not_started" || status === "planned" || status === "pending";
-  }
-  if (filter === "in_progress") {
-    return status === "in_progress";
-  }
-  return status === "completed";
-};
-
-const getNeedSubmitError = (error: unknown): string => {
-  let message = "Unable to submit the workplace need.";
-  if (isAxiosError<ApiErrorResponse>(error)) {
-    const apiErrors = error.response?.data?.errors;
-    const firstFieldError =
-      apiErrors &&
-      Object.values(apiErrors)
-        .flatMap((value) => (Array.isArray(value) ? value : [value]))
-        .find(Boolean);
-    message =
-      (typeof firstFieldError === "string" ? firstFieldError : undefined) ??
-      error.response?.data?.message ??
-      message;
-  }
-  return message;
-};
+const formatStatusLabel = (status: string): string =>
+  status.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
 export const WorkerDashboardPage = () => {
   useWorkspacePageTitle("Worker Dashboard");
   const { user } = useAuth();
   const [dashboard, setDashboard] = useState<WorkerAttendanceDashboardData | null>(null);
   const [taskAssignments, setTaskAssignments] = useState<TaskAssignment[]>([]);
-  const [taskFilter, setTaskFilter] = useState<TaskFilter>("all");
   const [workplaceNeeds, setWorkplaceNeeds] = useState<WorkplaceNeed[]>([]);
-  const [workplaceNeedProjects, setWorkplaceNeedProjects] = useState<
-    WorkplaceNeedContextProject[]
-  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isClockOutDialogOpen, setIsClockOutDialogOpen] = useState(false);
@@ -117,17 +64,14 @@ export const WorkerDashboardPage = () => {
     setErrorMessage(null);
 
     try {
-      const [attendanceResponse, assignmentResponse, needsResponse, contextResponse] =
-        await Promise.all([
-          fetchWorkerAttendanceDashboard(),
-          listMyTaskAssignments(),
-          listMyWorkplaceNeeds(),
-          getWorkplaceNeedContext(),
-        ]);
+      const [attendanceResponse, assignmentResponse, needsResponse] = await Promise.all([
+        fetchWorkerAttendanceDashboard(),
+        listMyTaskAssignments(),
+        listMyWorkplaceNeeds(),
+      ]);
       setDashboard(attendanceResponse);
       setTaskAssignments(assignmentResponse.results);
       setWorkplaceNeeds(needsResponse.results);
-      setWorkplaceNeedProjects(contextResponse.results);
       setCurrentTime(new Date(attendanceResponse.server_time).getTime());
     } catch (error) {
       if (isAxiosError<ApiErrorResponse>(error)) {
@@ -171,11 +115,9 @@ export const WorkerDashboardPage = () => {
 
   const summary = dashboard?.attendance.summary;
   const workerName = dashboard?.worker?.name ?? user?.name ?? "Worker";
-  const completedShifts = summary?.completed_shift_count ?? 0;
   const totalHoursDisplay = formatDisplayHours(summary?.recorded_total_hours ?? 0);
   const todayLabel = formatHeaderDate(new Date());
   const greeting = getGreeting();
-  const attendanceHistory = dashboard?.attendance.history ?? [];
 
   const activeAssignments = useMemo(
     () => taskAssignments.filter((assignment) => assignment.is_active),
@@ -192,11 +134,6 @@ export const WorkerDashboardPage = () => {
   const openNeeds = useMemo(
     () => workplaceNeeds.filter((need) => OPEN_NEED_STATUSES.has(need.status)),
     [workplaceNeeds],
-  );
-
-  const filteredAssignments = useMemo(
-    () => taskAssignments.filter((assignment) => matchesFilter(assignment, taskFilter)),
-    [taskAssignments, taskFilter],
   );
 
   const performClockIn = async (assignmentId?: number) => {
@@ -265,45 +202,6 @@ export const WorkerDashboardPage = () => {
     }
   };
 
-  const handleTaskUpdateSubmit = async (
-    assignmentId: number,
-    payload: DailyTaskUpdatePayload,
-  ) => {
-    setErrorMessage(null);
-    setSuccessMessage(null);
-    try {
-      await createTaskAssignmentUpdate(assignmentId, payload);
-      setSuccessMessage("Daily work update submitted.");
-      await loadDashboard({ silent: true });
-    } catch (error) {
-      if (isAxiosError<ApiErrorResponse>(error)) {
-        setErrorMessage(error.response?.data?.message ?? "Unable to submit the daily update.");
-      } else {
-        setErrorMessage("Unable to submit the daily update.");
-      }
-      throw error;
-    }
-  };
-
-  const refreshSubmitContext = async () => {
-    const contextResponse = await getWorkplaceNeedContext();
-    setWorkplaceNeedProjects(contextResponse.results);
-  };
-
-  const handleWorkplaceNeedSubmit = async (payload: FormData) => {
-    setErrorMessage(null);
-    setSuccessMessage(null);
-    try {
-      await createWorkplaceNeed(payload);
-      setSuccessMessage("Workplace need submitted.");
-      await loadDashboard({ silent: true });
-    } catch (error) {
-      const message = getNeedSubmitError(error);
-      setErrorMessage(message);
-      throw new Error(message);
-    }
-  };
-
   return (
     <div className="role-dash">
       {errorMessage ? (
@@ -323,9 +221,7 @@ export const WorkerDashboardPage = () => {
             {greeting}, {workerName}
           </p>
           <h1 className="role-dash__title">Dashboard</h1>
-          <p className="role-dash__subtitle">
-            Trace today&apos;s work through tasks, attendance and workplace needs.
-          </p>
+          <p className="role-dash__subtitle">Today&apos;s shift and assigned work.</p>
         </div>
         <p className="role-dash__date">{todayLabel}</p>
       </header>
@@ -389,130 +285,33 @@ export const WorkerDashboardPage = () => {
         </div>
       </section>
 
-      <section className="role-dash__map" aria-label="Worker tracer">
-        <div className="role-dash__map-head">
-          <h2>Work tracer</h2>
-          <p>How your day connects across the site.</p>
-        </div>
-        <ol className="role-dash__trace">
-          <li>
-            <Link className="role-dash__trace-node" to="/worker/tasks">
-              <span className="role-dash__trace-label">Tasks</span>
-              <strong>{isLoading ? "—" : taskAssignments.length}</strong>
-            </Link>
-          </li>
-          <li className="role-dash__trace-line" aria-hidden="true" />
-          <li>
-            <Link className="role-dash__trace-node" to="/worker/attendance">
-              <span className="role-dash__trace-label">Attendance</span>
-              <strong>{isLoading ? "—" : completedShifts}</strong>
-            </Link>
-          </li>
-          <li className="role-dash__trace-line" aria-hidden="true" />
-          <li>
-            <Link className="role-dash__trace-node" to="/worker/workplace-needs">
-              <span className="role-dash__trace-label">Needs</span>
-              <strong>{isLoading ? "—" : openNeeds.length}</strong>
-            </Link>
-          </li>
-        </ol>
-      </section>
-
       <section className="role-dash__list" aria-label="Assigned tasks">
         <div className="role-dash__list-head">
           <h2>Assigned tasks</h2>
-          <Link to="/worker/tasks">{isLoading ? "…" : `${taskAssignments.length} assigned`}</Link>
+          <span>{isLoading ? "…" : `${taskAssignments.length} assigned`}</span>
         </div>
         {isLoading ? (
           <p className="role-dash__empty">Loading tasks...</p>
         ) : taskAssignments.length === 0 ? (
           <p className="role-dash__empty">No tasks assigned yet.</p>
         ) : (
-          <>
-            <div className="worker-page__filters" role="tablist" aria-label="Task filters">
-              {(
-                [
-                  ["all", "All"],
-                  ["pending", "Pending"],
-                  ["in_progress", "In Progress"],
-                  ["completed", "Completed"],
-                ] as const
-              ).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  role="tab"
-                  aria-selected={taskFilter === value}
-                  className={`worker-page__filter${
-                    taskFilter === value ? " worker-page__filter--active" : ""
-                  }`}
-                  onClick={() => setTaskFilter(value)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <WorkerTaskBoard
-              assignments={filteredAssignments}
-              onSubmitUpdate={handleTaskUpdateSubmit}
-              showHeader={false}
-              title="Tasks"
-            />
-          </>
+          <ul className="role-dash__feed">
+            {taskAssignments.map((assignment) => (
+              <li key={assignment.assignment_id} className="role-dash__feed-item">
+                <div>
+                  <strong>{assignment.task.title}</strong>
+                  <span>
+                    {assignment.task.project_name}
+                    {assignment.task.milestone_title
+                      ? ` · ${assignment.task.milestone_title}`
+                      : ""}
+                  </span>
+                </div>
+                <span>{formatStatusLabel(getAssignmentStatus(assignment))}</span>
+              </li>
+            ))}
+          </ul>
         )}
-      </section>
-
-      <section className="role-dash__map" aria-label="Attendance history">
-        <div className="role-dash__map-head">
-          <h2>Attendance history</h2>
-          <Link to="/worker/attendance">{isLoading ? "…" : `${completedShifts} shifts`}</Link>
-        </div>
-        {isLoading ? (
-          <p className="role-dash__empty">Loading attendance...</p>
-        ) : attendanceHistory.length === 0 ? (
-          <p className="role-dash__empty">No attendance records yet.</p>
-        ) : (
-          <div className="worker-page__table-wrap">
-            <table className="worker-page__table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Clock In</th>
-                  <th>Clock Out</th>
-                  <th>Task</th>
-                  <th>Hours</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attendanceHistory.map((record: AttendanceShiftRecord) => (
-                  <tr key={record.attendance_id}>
-                    <td className="worker-page__table-date">
-                      {formatCompactDate(record.attendance_date)}
-                    </td>
-                    <td>{formatTimeOnly(record.clock_in_at)}</td>
-                    <td>{formatTimeOnly(record.clock_out_at)}</td>
-                    <td>{record.task_title || "—"}</td>
-                    <td className="worker-page__table-hours">{formatRecordHours(record)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      <section className="role-dash__list" aria-label="Workplace needs">
-        <WorkplaceNeedsPanel
-          mode="worker"
-          title="Workplace needs"
-          description="Submit a request and track it through supervisor verification."
-          needs={workplaceNeeds}
-          contextProjects={workplaceNeedProjects}
-          isLoading={isLoading}
-          onSubmitNeed={handleWorkplaceNeedSubmit}
-          onPrepareSubmit={refreshSubmitContext}
-          submitLabel="+ Submit Need"
-        />
       </section>
 
       {isClockInDialogOpen ? (
