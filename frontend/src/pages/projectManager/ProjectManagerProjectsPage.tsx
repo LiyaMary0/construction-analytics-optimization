@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { ProjectWorkspace } from "../../components/projects/ProjectWorkspace";
 import { WorkplaceNeedsPanel } from "../../components/projects/WorkplaceNeedsPanel";
+import { useWorkspacePageTitle } from "../../contexts/AdminChromeContext";
 import {
   listPmWorkplaceNeeds,
   updateWorkplaceNeedByPm,
@@ -20,6 +21,7 @@ const getErrorMessage = (error: unknown, fallbackMessage: string): string => {
 };
 
 export const ProjectManagerProjectsPage = () => {
+  useWorkspacePageTitle("Projects");
   const [needs, setNeeds] = useState<WorkplaceNeed[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

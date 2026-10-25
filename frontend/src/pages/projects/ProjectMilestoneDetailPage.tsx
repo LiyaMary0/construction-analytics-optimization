@@ -138,27 +138,34 @@ export const ProjectMilestoneDetailPage = () => {
         </div>
       </header>
 
-      <section className="project-detail-overview__card">
-        <div className="project-detail-overview__summary-grid">
-          <div className="project-detail-overview__field">
-            <span className="project-detail-overview__field-label">Start Date</span>
-            <p className="project-detail-overview__field-value">
-              {formatDateLabel(milestone.planned_start_date)}
-            </p>
+      <section className="project-detail-overview__stats" aria-label="Milestone schedule">
+        <article className="project-detail-overview__stat">
+          <span className="project-detail-overview__stat-label">Start Date</span>
+          <p className="project-detail-overview__stat-value">
+            {formatDateLabel(milestone.planned_start_date)}
+          </p>
+        </article>
+        <article className="project-detail-overview__stat">
+          <span className="project-detail-overview__stat-label">End Date</span>
+          <p className="project-detail-overview__stat-value">{formatDateLabel(endDate)}</p>
+        </article>
+        <article className="project-detail-overview__stat">
+          <span className="project-detail-overview__stat-label">Duration</span>
+          <p className="project-detail-overview__stat-value">{span ?? "—"}</p>
+        </article>
+        <article className="project-detail-overview__stat">
+          <span className="project-detail-overview__stat-label">Progress</span>
+          <p className="project-detail-overview__stat-value">{progress.toFixed(0)}%</p>
+          <div
+            className="project-detail-overview__stat-bar"
+            role="progressbar"
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <span style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} />
           </div>
-          <div className="project-detail-overview__field">
-            <span className="project-detail-overview__field-label">End Date</span>
-            <p className="project-detail-overview__field-value">{formatDateLabel(endDate)}</p>
-          </div>
-          <div className="project-detail-overview__field">
-            <span className="project-detail-overview__field-label">Duration</span>
-            <p className="project-detail-overview__field-value">{span ?? "—"}</p>
-          </div>
-          <div className="project-detail-overview__field">
-            <span className="project-detail-overview__field-label">Progress</span>
-            <p className="project-detail-overview__field-value">{progress.toFixed(0)}%</p>
-          </div>
-        </div>
+        </article>
       </section>
 
       <div className="milestone-detail-sections">

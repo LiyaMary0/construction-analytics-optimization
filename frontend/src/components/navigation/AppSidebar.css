@@ -50,6 +50,46 @@
   gap: 0.2rem;
 }
 
+.app-sidebar__link-group {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.app-sidebar__subnav {
+  display: grid;
+  gap: 0.05rem;
+  margin: 0.15rem 0 0.2rem;
+  padding: 0 0 0 2.55rem;
+}
+
+.app-sidebar__sublink {
+  display: flex;
+  align-items: center;
+  min-height: 2.15rem;
+  padding: 0.25rem 0.65rem;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 0.4rem;
+  color: var(--brand-sidebar-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.app-sidebar__sublink:hover,
+.app-sidebar__sublink:focus-visible {
+  color: var(--brand-sidebar-text);
+  background: rgba(255, 255, 255, 0.04);
+  outline: none;
+}
+
+.app-sidebar__sublink--active {
+  color: #ffffff;
+  border-left-color: var(--brand-accent);
+  background: rgba(255, 255, 255, 0.06);
+  font-weight: 600;
+}
+
 .app-sidebar__link {
   display: flex;
   align-items: center;

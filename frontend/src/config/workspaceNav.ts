@@ -9,7 +9,14 @@ export type WorkspaceNavIcon =
   | "tasks"
   | "attendance"
   | "needs"
-  | "verify";
+  | "verify"
+  | "documents";
+
+export type WorkspaceNavChild = {
+  label: string;
+  to: string;
+  matches: (pathname: string) => boolean;
+};
 
 export type WorkspaceNavItem = {
   label: string;
@@ -17,7 +24,36 @@ export type WorkspaceNavItem = {
   icon: WorkspaceNavIcon;
   end?: boolean;
   matches: (pathname: string) => boolean;
+  children?: WorkspaceNavChild[];
 };
+
+const profitLossNavChildren = (base: string): WorkspaceNavChild[] => [
+  {
+    label: "Milestone values",
+    to: `${base}/values`,
+    matches: (pathname) => pathname === `${base}/values`,
+  },
+  {
+    label: "Materials",
+    to: `${base}/materials`,
+    matches: (pathname) => pathname === `${base}/materials`,
+  },
+  {
+    label: "Expenses",
+    to: `${base}/expenses`,
+    matches: (pathname) => pathname === `${base}/expenses`,
+  },
+  {
+    label: "Labour",
+    to: `${base}/labour`,
+    matches: (pathname) => pathname === `${base}/labour`,
+  },
+  {
+    label: "Wage rates",
+    to: `${base}/wages`,
+    matches: (pathname) => pathname === `${base}/wages`,
+  },
+];
 
 export type WorkspaceNavSection = {
   title: string;
@@ -72,19 +108,51 @@ export const getWorkspaceNav = (roleName?: string | null): WorkspaceNavSection[]
         title: "Workspace",
         links: [
           {
+            label: "Dashboard",
+            to: "/project-manager/dashboard",
+            icon: "dashboard",
+            end: true,
+            matches: (pathname) => pathname === "/project-manager/dashboard",
+          },
+          {
             label: "Projects",
             to: "/project-manager/projects",
             icon: "projects",
             matches: (pathname) =>
               pathname === "/project-manager/projects" ||
-              pathname === "/project-manager/dashboard" ||
-              startsWith(pathname, "/project-manager/projects"),
+              startsWith(pathname, "/project-manager/projects/view/overview") ||
+              (startsWith(pathname, "/project-manager/projects/view") &&
+                !startsWith(pathname, "/project-manager/projects/view/milestones") &&
+                !startsWith(pathname, "/project-manager/projects/view/documents")),
+          },
+          {
+            label: "Milestones",
+            to: "/project-manager/milestones",
+            icon: "tasks",
+            matches: (pathname) =>
+              pathname === "/project-manager/milestones" ||
+              startsWith(pathname, "/project-manager/projects/view/milestones"),
+          },
+          {
+            label: "Documents",
+            to: "/project-manager/documents",
+            icon: "documents",
+            matches: (pathname) =>
+              pathname === "/project-manager/documents" ||
+              startsWith(pathname, "/project-manager/projects/view/documents"),
+          },
+          {
+            label: "Workplace Needs",
+            to: "/project-manager/workplace-needs",
+            icon: "needs",
+            matches: (pathname) => startsWith(pathname, "/project-manager/workplace-needs"),
           },
           {
             label: "Profit & Loss",
             to: "/project-manager/profit-loss",
             icon: "finance",
             matches: (pathname) => startsWith(pathname, "/project-manager/profit-loss"),
+            children: profitLossNavChildren("/project-manager/profit-loss"),
           },
         ],
       },

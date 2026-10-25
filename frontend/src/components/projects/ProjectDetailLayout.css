@@ -314,14 +314,40 @@
 .project-milestone-detail {
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 1.15rem;
   scroll-margin-top: 1rem;
+}
+
+.project-milestone-detail > .project-detail-layout__header {
+  margin-bottom: 0;
+}
+
+.project-milestone-detail .project-detail-overview__stat {
+  min-height: 0;
+  padding: 1rem 1.1rem;
+}
+
+.project-milestone-detail .project-detail-overview__stat-value {
+  font-size: 1.0625rem;
+}
+
+.project-milestone-detail .project-detail-overview__stat-bar {
+  margin-top: 0.65rem;
+}
+
+.project-milestone-detail .milestone-detail-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 0.15rem;
+  padding-top: 0;
+  border-top: 0;
 }
 
 .milestone-detail-sections {
   display: flex;
   flex-direction: column;
-  gap: 2.25rem;
+  gap: 1.25rem;
 }
 
 @media (max-width: 1199.98px) {

@@ -36,22 +36,45 @@ export const AppSidebar = ({ onLogout, isMobileOpen = false, onNavigate }: AppSi
             <div className="app-sidebar__section-title">{section.title}</div>
             <nav className="app-sidebar__nav" aria-label={section.title}>
               {section.links.map((link) => {
-                const isActive = link.matches(pathname);
+                const childActive = link.children?.some((child) => child.matches(pathname)) ?? false;
+                const isActive = childActive ? false : link.matches(pathname);
+                const showChildren = Boolean(
+                  link.children?.length && (link.matches(pathname) || childActive),
+                );
 
                 return (
-                  <NavLink
-                    key={link.to}
-                    className={`app-sidebar__link${isActive ? " app-sidebar__link--active" : ""}`.trim()}
-                    to={link.to}
-                    end={link.end}
-                    aria-current={isActive ? "page" : undefined}
-                    onClick={onNavigate}
-                  >
-                    <span className="app-sidebar__icon">
-                      <WorkspaceNavIconMark name={link.icon} />
-                    </span>
-                    <span>{link.label}</span>
-                  </NavLink>
+                  <div key={link.to} className="app-sidebar__link-group">
+                    <NavLink
+                      className={`app-sidebar__link${isActive ? " app-sidebar__link--active" : ""}`.trim()}
+                      to={link.to}
+                      end={link.end}
+                      aria-current={isActive ? "page" : undefined}
+                      onClick={onNavigate}
+                    >
+                      <span className="app-sidebar__icon">
+                        <WorkspaceNavIconMark name={link.icon} />
+                      </span>
+                      <span>{link.label}</span>
+                    </NavLink>
+                    {showChildren ? (
+                      <div className="app-sidebar__subnav">
+                        {link.children?.map((child) => {
+                          const isChildActive = child.matches(pathname);
+                          return (
+                            <NavLink
+                              key={child.to}
+                              className={`app-sidebar__sublink${isChildActive ? " app-sidebar__sublink--active" : ""}`.trim()}
+                              to={child.to}
+                              aria-current={isChildActive ? "page" : undefined}
+                              onClick={onNavigate}
+                            >
+                              {child.label}
+                            </NavLink>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
                 );
               })}
             </nav>

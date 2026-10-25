@@ -78,6 +78,20 @@ export const WorkspaceNavIconMark = ({ name }: { name: WorkspaceNavIcon }) => {
     );
   }
 
+  if (name === "documents") {
+    return (
+      <svg {...iconProps}>
+        <path
+          d="M5.25 3.75h5.2L12.75 6v8.25A1 1 0 0 1 11.75 15.5h-6.5a1 1 0 0 1-1-1.25V4.75a1 1 0 0 1 1-1Z"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+        <path d="M10.4 3.75V6h2.35M6.5 9h5M6.5 11.5h3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
   if (name === "verify") {
     return (
       <svg {...iconProps}>

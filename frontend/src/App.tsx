@@ -30,7 +30,10 @@ import ViewExtensionPage from "./pages/projects/ViewExtensionPage";
 import ViewTaskPage from "./pages/projects/ViewTaskPage";
 import ClientProjectsPage from "./pages/client/ClientProjectsPage";
 import LandingPage from "./pages/marketing/LandingPage";
+import ProjectManagerDashboardPage from "./pages/projectManager/ProjectManagerDashboardPage";
+import ProjectManagerPickerPage from "./pages/projectManager/ProjectManagerPickerPage";
 import ProjectManagerProjectsPage from "./pages/projectManager/ProjectManagerProjectsPage";
+import ProjectManagerWorkplaceNeedsPage from "./pages/projectManager/ProjectManagerWorkplaceNeedsPage";
 import SiteEngineerDashboardPage from "./pages/siteEngineer/SiteEngineerDashboardPage";
 import SiteEngineerProjectsPage from "./pages/siteEngineer/SiteEngineerProjectsPage";
 import SiteEngineerTasksPage from "./pages/siteEngineer/SiteEngineerTasksPage";
@@ -121,6 +124,7 @@ export const App = () => {
               <Route element={<Navigate replace to="projects" />} index />
               <Route element={<AdminDashboardPage />} path="dashboard" />
               <Route element={<ProfitLossDashboardPage />} path="profit-loss" />
+              <Route element={<ProfitLossDashboardPage />} path="profit-loss/:section" />
               <Route element={<AdminProjectsPage />} path="projects" />
               <Route
                 element={<CreateMilestonePage />}
@@ -188,9 +192,13 @@ export const App = () => {
           >
             <Route element={<UserWorkspaceLayout />} path="/project-manager">
               <Route element={<Navigate replace to="dashboard" />} index />
-              <Route element={<ProjectManagerProjectsPage />} path="dashboard" />
+              <Route element={<ProjectManagerDashboardPage />} path="dashboard" />
               <Route element={<ProjectManagerProjectsPage />} path="projects" />
+              <Route element={<ProjectManagerPickerPage tab="milestones" />} path="milestones" />
+              <Route element={<ProjectManagerPickerPage tab="documents" />} path="documents" />
+              <Route element={<ProjectManagerWorkplaceNeedsPage />} path="workplace-needs" />
               <Route element={<ProfitLossDashboardPage />} path="profit-loss" />
+              <Route element={<ProfitLossDashboardPage />} path="profit-loss/:section" />
               <Route
                 element={<CreateMilestonePage />}
                 path="projects/view/milestones/new"
