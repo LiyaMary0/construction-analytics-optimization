@@ -207,16 +207,36 @@ export const getWorkspaceNav = (roleName?: string | null): WorkspaceNavSection[]
             matches: (pathname) => pathname === "/supervisor/dashboard",
           },
           {
-            label: "Verifications",
-            to: "/supervisor/verifications",
-            icon: "verify",
-            matches: (pathname) => startsWith(pathname, "/supervisor/verifications"),
-          },
-          {
             label: "Projects",
             to: "/supervisor/projects",
             icon: "projects",
             matches: (pathname) => startsWith(pathname, "/supervisor/projects"),
+          },
+          {
+            label: "Assignments",
+            to: "/supervisor/assignments",
+            icon: "tasks",
+            matches: (pathname) => startsWith(pathname, "/supervisor/assignments"),
+          },
+          {
+            label: "Verifications",
+            to: "/supervisor/verifications/tasks",
+            icon: "verify",
+            matches: (pathname) => startsWith(pathname, "/supervisor/verifications"),
+            children: [
+              {
+                label: "Task completions",
+                to: "/supervisor/verifications/tasks",
+                matches: (pathname) =>
+                  pathname === "/supervisor/verifications/tasks" ||
+                  pathname === "/supervisor/verifications",
+              },
+              {
+                label: "Workplace needs",
+                to: "/supervisor/verifications/needs",
+                matches: (pathname) => pathname === "/supervisor/verifications/needs",
+              },
+            ],
           },
         ],
       },

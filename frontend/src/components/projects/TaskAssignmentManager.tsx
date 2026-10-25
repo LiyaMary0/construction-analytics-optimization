@@ -22,6 +22,11 @@ interface TaskAssignmentManagerProps {
     payload: Partial<TaskWorkerAssignmentPayload>,
   ) => Promise<void>;
   onDeleteAssignment: (assignmentId: number) => Promise<void>;
+  view?: "full" | "form" | "list";
+  initialAssignmentId?: number | null;
+  onAssignClick?: () => void;
+  onEditClick?: (assignment: TaskAssignment) => void;
+  onSaved?: () => void;
 }
 
 type AssignmentFormState = {
@@ -50,6 +55,11 @@ export const TaskAssignmentManager = ({
   onCreateAssignment,
   onUpdateAssignment,
   onDeleteAssignment,
+  view = "full",
+  initialAssignmentId = null,
+  onAssignClick,
+  onEditClick,
+  onSaved,
 }: TaskAssignmentManagerProps) => {
   const [editingAssignment, setEditingAssignment] = useState<TaskAssignment | null>(null);
   const [formState, setFormState] = useState<AssignmentFormState>(defaultAssignmentFormState);
@@ -103,6 +113,19 @@ export const TaskAssignmentManager = ({
     });
   }, [editingAssignment, resetFieldValidation]);
 
+  useEffect(() => {
+    if (!initialAssignmentId || !selectedTask) {
+      return;
+    }
+    const match =
+      selectedTask.active_assignments.find(
+        (assignment) => assignment.assignment_id === initialAssignmentId,
+      ) ?? null;
+    if (match) {
+      setEditingAssignment(match);
+    }
+  }, [initialAssignmentId, selectedTask]);
+
   const updateField = <K extends keyof AssignmentFormState>(
     field: K,
     value: AssignmentFormState[K],
@@ -152,6 +175,7 @@ export const TaskAssignmentManager = ({
         await onCreateAssignment(payload);
       }
       resetForm();
+      onSaved?.();
     } finally {
       setProcessingAssignmentId(null);
     }
@@ -238,7 +262,7 @@ export const TaskAssignmentManager = ({
         </div>
       ) : null}
 
-      {selectedTask ? (
+      {selectedTask && view !== "list" ? (
         <form
           className="task-assignment-manager__form"
           onSubmit={(event) => void handleSubmit(event)}
@@ -341,7 +365,20 @@ export const TaskAssignmentManager = ({
         </form>
       ) : null}
 
-      {!selectedTask ? (
+      {view === "list" && selectedTask && onAssignClick ? (
+        <div className="task-assignment-manager__actions">
+          <button
+            type="button"
+            className="btn task-assignment-manager__primary-action"
+            onClick={onAssignClick}
+            disabled={!selectedTask.is_approved}
+          >
+            Assign Worker
+          </button>
+        </div>
+      ) : null}
+
+      {view === "form" ? null : !selectedTask ? (
         <div className="task-assignment-manager__empty">
           Select a task to assign workers and manage duty instructions.
         </div>
@@ -367,7 +404,9 @@ export const TaskAssignmentManager = ({
                 <button
                   type="button"
                   className="btn task-assignment-manager__text-action"
-                  onClick={() => setEditingAssignment(assignment)}
+                  onClick={() =>
+                    onEditClick ? onEditClick(assignment) : setEditingAssignment(assignment)
+                  }
                 >
                   Edit
                 </button>

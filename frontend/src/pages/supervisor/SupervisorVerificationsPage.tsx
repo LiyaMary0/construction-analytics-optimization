@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import axios from "axios";
 
 import { DailyUpdateBoard } from "../../components/projects/DailyUpdateBoard";
@@ -57,9 +57,9 @@ const priorityClass = (priority: string): string => {
 type VerificationTab = "tasks" | "needs";
 
 export const SupervisorVerificationsPage = () => {
-  useWorkspacePageTitle("Verifications");
-  const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab: VerificationTab = searchParams.get("tab") === "needs" ? "needs" : "tasks";
+  const { pathname } = useLocation();
+  const activeTab: VerificationTab = pathname.endsWith("/needs") ? "needs" : "tasks";
+  useWorkspacePageTitle(activeTab === "needs" ? "Workplace Needs" : "Task Completions");
 
   const [needs, setNeeds] = useState<WorkplaceNeed[]>([]);
   const [updates, setUpdates] = useState<DailyTaskUpdate[]>([]);
@@ -70,15 +70,6 @@ export const SupervisorVerificationsPage = () => {
   const [modalError, setModalError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const viewButtonRefs = useRef<Record<number, HTMLButtonElement | null>>({});
-
-  const pendingTaskUpdates = useMemo(
-    () => updates.filter((update) => update.supervisor_review_status === "pending"),
-    [updates],
-  );
-
-  const setTab = (tab: VerificationTab) => {
-    setSearchParams(tab === "needs" ? { tab: "needs" } : { tab: "tasks" });
-  };
 
   const loadData = async () => {
     setIsLoading(true);
@@ -191,33 +182,11 @@ export const SupervisorVerificationsPage = () => {
 
         <header className="supervisor-page__intro">
           <p className="supervisor-page__support">
-            Review worker task completions and workplace needs. Task progress becomes official after
-            you approve and the Site Engineer verifies.
+            {activeTab === "needs"
+              ? "Review worker requests before forwarding them to the Project Manager."
+              : "Approve a worker's completion so the Site Engineer can verify it. After both accept, the task is completed and milestone progress updates."}
           </p>
         </header>
-
-        <div className="supervisor-page__inbox-tabs" role="tablist" aria-label="Verification queues">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "tasks"}
-            className={`supervisor-page__inbox-tab${activeTab === "tasks" ? " is-active" : ""}`}
-            onClick={() => setTab("tasks")}
-          >
-            Task completions
-            {!isLoading ? ` (${pendingTaskUpdates.length})` : ""}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "needs"}
-            className={`supervisor-page__inbox-tab${activeTab === "needs" ? " is-active" : ""}`}
-            onClick={() => setTab("needs")}
-          >
-            Workplace needs
-            {!isLoading ? ` (${needs.length})` : ""}
-          </button>
-        </div>
 
         {activeTab === "tasks" ? (
           isLoading ? (

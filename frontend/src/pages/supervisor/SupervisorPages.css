@@ -277,6 +277,11 @@
   outline: none;
 }
 
+.supervisor-page__project-card--active {
+  border-color: #ff5a1f;
+  background: rgba(255, 90, 31, 0.08);
+}
+
 .supervisor-page__project-card-top {
   display: flex;
   align-items: flex-start;
@@ -722,8 +727,58 @@
 
 .supervisor-page__assignment-controls {
   display: grid;
-  gap: 6px;
-  max-width: 28rem;
+  gap: 0.4rem;
+  max-width: none;
+}
+
+.supervisor-assign {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.supervisor-assign__back {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.35rem;
+  color: #d7dde4;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.supervisor-assign__back:hover {
+  color: #ffffff;
+}
+
+.supervisor-assign__panel {
+  display: grid;
+  gap: 1.15rem;
+  padding: 1.15rem 1.2rem 1.25rem;
+  border: 1px solid var(--supervisor-border);
+  border-radius: 0.75rem;
+  background: var(--supervisor-surface);
+}
+
+.supervisor-assign .supervisor-page__assignment-controls .admin-control,
+.supervisor-assign .task-assignment-manager select.form-select,
+.supervisor-assign .task-assignment-manager .form-control {
+  max-width: none;
+}
+
+.supervisor-assign .task-assignment-manager__form,
+.supervisor-assign .task-assignment-manager > .task-assignment-manager__field {
+  max-width: 36rem;
+}
+
+@media (max-width: 767.98px) {
+  .task-assignment-manager__card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .task-assignment-manager__inline-actions {
+    justify-content: flex-end;
+  }
 }
 
 .supervisor-page__control-label {

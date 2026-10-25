@@ -41,6 +41,7 @@ import SiteEngineerVerificationsPage from "./pages/siteEngineer/SiteEngineerVeri
 import SupervisorDashboardPage from "./pages/supervisor/SupervisorDashboardPage";
 import SupervisorVerificationsPage from "./pages/supervisor/SupervisorVerificationsPage";
 import SupervisorProjectsPage from "./pages/supervisor/SupervisorProjectsPage";
+import SupervisorAssignmentsPage from "./pages/supervisor/SupervisorAssignmentsPage";
 import WorkerDashboardPage from "./pages/worker/WorkerDashboardPage";
 import WorkerTasksPage from "./pages/worker/WorkerTasksPage";
 import WorkerAttendancePage from "./pages/worker/WorkerAttendancePage";
@@ -272,8 +273,20 @@ export const App = () => {
             <Route element={<UserWorkspaceLayout />} path="/supervisor">
               <Route element={<Navigate replace to="dashboard" />} index />
               <Route element={<SupervisorDashboardPage />} path="dashboard" />
-              <Route element={<SupervisorVerificationsPage />} path="verifications" />
               <Route element={<SupervisorProjectsPage />} path="projects" />
+              <Route element={<SupervisorAssignmentsPage />} path="assignments" />
+              <Route element={<SupervisorAssignmentsPage />} path="assignments/:projectId" />
+              <Route
+                element={<SupervisorAssignmentsPage />}
+                path="assignments/:projectId/assign"
+              />
+              <Route element={<Navigate replace to="verifications/tasks" />} path="verifications" />
+              <Route element={<SupervisorVerificationsPage />} path="verifications/tasks" />
+              <Route element={<SupervisorVerificationsPage />} path="verifications/needs" />
+              <Route
+                element={<Navigate replace to="/supervisor/verifications/needs" />}
+                path="workplace-needs"
+              />
             </Route>
           </Route>
 
