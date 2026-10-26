@@ -12,6 +12,56 @@
   width: min(100%, 38rem); /* ~608px */
 }
 
+.project-entity-modal.project-entity-modal--task .detail-modal__dialog {
+  width: min(100%, 40rem);
+  max-height: min(92vh, 46rem);
+}
+
+.project-entity-modal.project-entity-modal--task .detail-modal__header {
+  align-items: flex-start;
+  padding: 1rem 1.35rem 0.9rem;
+}
+
+.project-entity-modal.project-entity-modal--task .detail-modal__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.project-entity-modal.project-entity-modal--task .detail-modal__body {
+  padding: 1rem 1.35rem 1.15rem;
+}
+
+.project-entity-modal.project-entity-modal--task .project-entity-modal__form {
+  gap: 0.85rem;
+}
+
+.project-entity-modal.project-entity-modal--task .project-entity-modal__row {
+  gap: 0.85rem;
+  align-items: stretch;
+}
+
+.project-entity-modal.project-entity-modal--task .project-entity-modal__field {
+  gap: 0.4rem;
+}
+
+.project-entity-modal.project-entity-modal--task .project-entity-modal__label {
+  min-height: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.project-entity-modal.project-entity-modal--task .project-entity-modal__actions {
+  margin-top: 0.25rem;
+  padding-top: 0.9rem;
+}
+
+.project-entity-modal.project-entity-modal--task .project-entity-modal__textarea {
+  min-height: 3.5rem !important;
+  max-height: 5.5rem;
+}
+
 /* Prefer fitting content; scroll only if viewport is truly short */
 .project-entity-modal .detail-modal__body {
   flex: 0 1 auto;

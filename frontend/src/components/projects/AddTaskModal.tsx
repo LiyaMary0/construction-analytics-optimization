@@ -139,7 +139,7 @@ export const AddTaskModal = ({ isOpen, milestone, onClose, onSubmit }: AddTaskMo
 
   return (
     <DetailModal
-      className="project-entity-modal project-entity-modal--form"
+      className="project-entity-modal project-entity-modal--form project-entity-modal--task"
       isOpen={isOpen}
       title="Add Task"
       description={milestone ? `Add a task to ${milestone.title}.` : null}

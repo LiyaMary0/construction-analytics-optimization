@@ -682,6 +682,9 @@ class ProjectExecutionService:
             approval_note=validated_data.pop("approval_note", "") if auto_approve else "",
             **validated_data,
         )
+        if hasattr(milestone, "prefetched_tasks"):
+            delattr(milestone, "prefetched_tasks")
+        cls._refresh_milestone_status(milestone)
 
         return cls._task_queryset().get(pk=task.pk)
 
@@ -735,7 +738,11 @@ class ProjectExecutionService:
             task_id=task_id,
         )
         deleted_task_id = task.task_id
+        milestone = task.milestone
         task.delete()
+        if hasattr(milestone, "prefetched_tasks"):
+            delattr(milestone, "prefetched_tasks")
+        cls._refresh_milestone_status(milestone)
         return {"deleted": True, "task_id": deleted_task_id}
 
     @classmethod

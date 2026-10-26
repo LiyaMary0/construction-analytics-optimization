@@ -245,11 +245,7 @@ export const DailyUpdateBoard = ({
                       disabled={processingUpdateId === update.update_id}
                       onClick={() => void handleReview(update.update_id, "approved")}
                     >
-                      {processingUpdateId === update.update_id
-                        ? "Saving..."
-                        : mode === "site-engineer"
-                          ? "Verify completion"
-                          : "Approve completion"}
+                      {processingUpdateId === update.update_id ? "Saving..." : "Approve"}
                     </button>
                   </div>
                 </div>

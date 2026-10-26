@@ -35,6 +35,7 @@ import ProjectManagerPickerPage from "./pages/projectManager/ProjectManagerPicke
 import ProjectManagerProjectsPage from "./pages/projectManager/ProjectManagerProjectsPage";
 import ProjectManagerWorkplaceNeedsPage from "./pages/projectManager/ProjectManagerWorkplaceNeedsPage";
 import SiteEngineerDashboardPage from "./pages/siteEngineer/SiteEngineerDashboardPage";
+import SiteEngineerProjectDetailPage from "./pages/siteEngineer/SiteEngineerProjectDetailPage";
 import SiteEngineerProjectsPage from "./pages/siteEngineer/SiteEngineerProjectsPage";
 import SiteEngineerTasksPage from "./pages/siteEngineer/SiteEngineerTasksPage";
 import SiteEngineerVerificationsPage from "./pages/siteEngineer/SiteEngineerVerificationsPage";
@@ -257,6 +258,7 @@ export const App = () => {
               <Route element={<Navigate replace to="dashboard" />} index />
               <Route element={<SiteEngineerDashboardPage />} path="dashboard" />
               <Route element={<SiteEngineerProjectsPage />} path="projects" />
+              <Route element={<SiteEngineerProjectDetailPage />} path="projects/:projectId" />
               <Route element={<SiteEngineerTasksPage />} path="tasks" />
               <Route element={<SiteEngineerVerificationsPage />} path="verifications" />
             </Route>

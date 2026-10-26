@@ -1,6 +1,7 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { AddTaskModal } from "../../components/projects/AddTaskModal";
 import { ConcernPanel } from "../../components/projects/ConcernPanel";
 import { TaskManager } from "../../components/projects/TaskManager";
 import { WorkerAllocationPanel } from "../../components/projects/WorkerAllocationPanel";
@@ -43,6 +44,12 @@ export const SiteEngineerTasksPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+
+  const selectedMilestone = useMemo(
+    () => milestones.find((milestone) => milestone.milestone_id === selectedMilestoneId) ?? null,
+    [milestones, selectedMilestoneId],
+  );
 
   const loadTasks = async (projectId: number, milestoneId: number | null) => {
     if (!milestoneId) {
@@ -227,6 +234,7 @@ export const SiteEngineerTasksPage = () => {
                 onCreateTask={handleCreateTask}
                 onUpdateTask={handleUpdateTask}
                 onDeleteTask={handleDeleteTask}
+                onRequestCreate={() => setIsAddTaskOpen(true)}
               />
             </section>
 
@@ -244,6 +252,13 @@ export const SiteEngineerTasksPage = () => {
           </>
         )}
       </div>
+
+      <AddTaskModal
+        isOpen={isAddTaskOpen}
+        milestone={selectedMilestone}
+        onClose={() => setIsAddTaskOpen(false)}
+        onSubmit={handleCreateTask}
+      />
     </main>
   );
 };

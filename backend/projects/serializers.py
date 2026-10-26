@@ -156,11 +156,14 @@ def get_milestone_progress_percentage(milestone: Milestone) -> Decimal:
         tasks = list(task_queryset)
 
     if not tasks:
-        return HUNDRED_DECIMAL if milestone.status == Milestone.STATUS_COMPLETED else ZERO_DECIMAL
+        return ZERO_DECIMAL
 
-    task_progress_values = [get_task_progress_percentage(task) for task in tasks]
-    total = sum(task_progress_values, ZERO_DECIMAL)
-    return quantize_percentage(total / Decimal(len(task_progress_values)))
+    completed_count = sum(
+        1 for task in tasks if get_task_progress_percentage(task) >= HUNDRED_DECIMAL
+    )
+    return quantize_percentage(
+        (Decimal(completed_count) / Decimal(len(tasks))) * HUNDRED_DECIMAL
+    )
 
 
 def get_project_progress_percentage(project: Project) -> Decimal:
